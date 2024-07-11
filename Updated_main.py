@@ -44,7 +44,14 @@ dff = dff.groupby('ZIP CODE').agg({'NUMBER OF PERSONS INJURED': 'sum',
                                    'NUMBER OF CYCLIST KILLED': 'sum', 
                                    'NUMBER OF MOTORIST INJURED': 'sum', 
                                    'NUMBER OF MOTORIST KILLED': 'sum',
+                                   'CRASH DATE': 'count',
                                    }).reset_index() 
+
+dff = dff.rename(columns={'CRASH DATE': 'TOTAL CRASHES'})
+
+#Calculate average metrics
+dff['AVG PERSONS INJURED PER CRASH'] = dff['NUMBER OF PERSONS INJURED'] / dff['TOTAL CRASHES']
+dff['AVG PERSONS KILLED PER CRASH'] = dff['NUMBER OF PERSONS KILLED'] / dff['TOTAL CRASHES']
 
 print(dff)
 
@@ -62,17 +69,20 @@ app.layout = html.Div([
     html.H1(children='New York City Motor Vehicle Collisions', style={'textAlign':'center'}),
     dcc.Dropdown(id='dropdown-selection', 
                  options= [
+                    {'label': 'TOTAL CRASHES', 'value': 'TOTAL CRASHES'},
                     {'label': 'PERSONS INJURED', 'value': 'NUMBER OF PERSONS INJURED'},
                     {'label': 'PERSONS KILLED', 'value': 'NUMBER OF PERSONS KILLED'},
                     {'label': 'PEDESTRIANS INJURED', 'value': 'NUMBER OF PEDESTRIANS INJURED'},
                     {'label': 'PEDESTRIANS KILLED', 'value': 'NUMBER OF PEDESTRIANS KILLED'},
-                    {'label': 'CYCLISTS INJURED', 'value': 'NUMBER OF CYCLISTS INJURED'},
-                    {'label': 'CYCLISTS KILLED', 'value': 'NUMBER OF CYCLISTS KILLED'},
-                    {'label': 'MOTORISTS INJURED', 'value': 'NUMBER OF MOTORISTS INJURED'},
-                    {'label': 'MOTORISTS KILLED', 'value': 'NUMBER OF MOTORISTS KILLED'},
+                    {'label': 'CYCLIST INJURED', 'value': 'NUMBER OF CYCLIST INJURED'},
+                    {'label': 'CYCLIST KILLED', 'value': 'NUMBER OF CYCLIST KILLED'},
+                    {'label': 'MOTORIST INJURED', 'value': 'NUMBER OF MOTORIST INJURED'},
+                    {'label': 'MOTORIST KILLED', 'value': 'NUMBER OF MOTORIST KILLED'},
+                    {'label': 'AVG PERSONS INJURED PER CRASH', 'value': 'AVG PERSONS INJURED PER CRASH'},
+                    {'label': 'AVG PERSONS KILLED PER CRASH', 'value': 'AVG PERSONS KILLED PER CRASH'},
                  ], 
                  multi=False,
-                 value = 'NUMBER OF PERSONS INJURED'),
+                 value = 'TOTAL CRASHES'),
     dcc.Graph(id='graph-content')
 ])
 
@@ -101,7 +111,11 @@ def update_graph(selected_value):
     fig.update_coloraxes(colorbar_tickformat=',')  #Add this line to prevent shortening of numbers
     
     #Customize hover template and update the layout dynamically based on the selected value
-    hover_text = f'<b>ZIP Code:</b> %{{location}}<br><b>{selected_value}:</b> %{{z:,.0f}}<extra></extra>'
+    if "AVG" in selected_value:
+        hover_text = f'<b>ZIP Code:</b> %{{location}}<br><b>{selected_value}:</b> %{{z:.3f}}<extra></extra>'
+    else:
+        hover_text = f'<b>ZIP Code:</b> %{{location}}<br><b>{selected_value}:</b> %{{z:,.0f}}<extra></extra>'
+    
     fig.update_traces(hovertemplate=hover_text)
 
     return fig
