@@ -55,6 +55,10 @@ dff['AVG PERSONS KILLED PER CRASH'] = dff['NUMBER OF PERSONS KILLED'] / dff['TOT
 
 print(dff)
 
+#Aggregate data by date for the time series plot
+df['CRASH DATE'] = pd.to_datetime(df['CRASH DATE'])
+daily_crashes = df.groupby(df['CRASH DATE'].dt.date).size().reset_index(name='TOTAL CRASHES')
+
 #load the geojson file
 ny_zips_json = json.load(open('ny_new_york_zip_codes_geo.min.json'))
 
@@ -84,6 +88,9 @@ app.layout = html.Div([
                  multi=False,
                  value = 'TOTAL CRASHES'),
     dcc.Graph(id='graph-content')
+    dcc.Graph(id='time-series-graph', figure=px.line(daily_crashes, x='CRASH DATE', y='TOTAL CRASHES',
+                  title='Total Crashes in New York Over Time',
+                  labels={'CRASH DATE': 'Date', 'TOTAL CRASHES': 'Total Crashes'}))  #New graph for time series plot
 ])
 
 #callback function
